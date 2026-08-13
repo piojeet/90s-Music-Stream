@@ -4,15 +4,14 @@ import React, { useMemo } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MiniPlayer, SongRow } from '@/components/PlayerPieces';
-import { songs } from '@/data/music';
 import { usePlayer } from '@/context/PlayerContext';
 import { useColors } from '@/hooks/useColors';
 
 export default function FavoritesScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { favorites } = usePlayer();
-  const favoriteSongs = useMemo(() => songs.filter((song) => favorites.includes(song.id)), [favorites]);
+  const { favorites, songs } = usePlayer();
+  const favoriteSongs = useMemo(() => songs.filter((song) => favorites.includes(song.id)), [favorites, songs]);
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <FlatList

@@ -8,97 +8,42 @@ export type Song = {
   year: string;
   duration: string;
   seconds: number;
-  cover: ImageSourcePropType;
+  cover: ImageSourcePropType | { uri: string };
+  audioUrl?: string;
   genre: string;
 };
 
-export const songs: Song[] = [
-  {
-    id: 'pehla-nasha',
-    title: 'Pehla Nasha',
-    artist: 'Udit Narayan, Sadhana Sargam',
-    album: 'Jo Jeeta Wohi Sikandar',
-    year: '1992',
-    duration: '05:44',
-    seconds: 344,
-    cover: require('../assets/images/cover-romance.jpg'),
-    genre: 'Romance',
-  },
-  {
-    id: 'ek-ladki',
-    title: 'Ek Ladki Ko Dekha',
-    artist: 'Kumar Sanu',
-    album: '1942: A Love Story',
-    year: '1994',
-    duration: '04:55',
-    seconds: 295,
-    cover: require('../assets/images/cover-friends.jpg'),
-    genre: 'Romance',
-  },
-  {
-    id: 'aankhon-ki',
-    title: 'Aankhon Ki Gustakhiyan',
-    artist: 'Kumar Sanu',
-    album: 'Hum Dil De Chuke Sanam',
-    year: '1999',
-    duration: '05:27',
-    seconds: 327,
-    cover: require('../assets/images/cover-romance.jpg'),
-    genre: 'Melody',
-  },
-  {
-    id: 'tu-hi-re',
-    title: 'Tu Hi Re',
-    artist: 'Hariharan',
-    album: 'Bombay',
-    year: '1995',
-    duration: '06:11',
-    seconds: 371,
-    cover: require('../assets/images/cover-friends.jpg'),
-    genre: 'Classics',
-  },
-  {
-    id: 'humko-humise',
-    title: 'Humko Humise Chura Lo',
-    artist: 'Lata Mangeshkar',
-    album: 'Mohabbatein',
-    year: '2000',
-    duration: '05:36',
-    seconds: 336,
-    cover: require('../assets/images/cover-romance.jpg'),
-    genre: 'Romance',
-  },
-  {
-    id: 'tujhe-dekha',
-    title: 'Tujhe Dekha To Yeh Jana Sanam',
-    artist: 'Kumar Sanu, Alka Yagnik',
-    album: 'Dilwale Dulhania Le Jayenge',
-    year: '1995',
-    duration: '05:19',
-    seconds: 319,
-    cover: require('../assets/images/cover-friends.jpg'),
-    genre: 'Classics',
-  },
-  {
-    id: 'kuch-kuch',
-    title: 'Kuch Kuch Hota Hai',
-    artist: 'Udit Narayan',
-    album: 'Kuch Kuch Hota Hai',
-    year: '1998',
-    duration: '04:38',
-    seconds: 278,
-    cover: require('../assets/images/cover-friends.jpg'),
-    genre: 'Pop',
-  },
-  {
-    id: 'pardesi',
-    title: 'Pardesi Pardesi Jana Nahi',
-    artist: 'Kumar Sanu, Alka Yagnik',
-    album: 'Raja Hindustani',
-    year: '1996',
-    duration: '06:09',
-    seconds: 369,
-    cover: require('../assets/images/cover-romance.jpg'),
-    genre: 'Heartbreak',
-  },
-];
+export function formatMongoSong(s: any): Song {
+  const seconds = typeof s.duration === 'number' && s.duration > 0 ? s.duration : 180;
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  const durationStr = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+  const fallbackCover = require('../assets/images/icon.png');
+  let coverProp: ImageSourcePropType | { uri: string } = fallbackCover;
+  if (s.coverImage && typeof s.coverImage === 'string') {
+    coverProp = { uri: s.coverImage };
+  } else if (s.cover) {
+    coverProp = typeof s.cover === 'string' ? { uri: s.cover } : s.cover;
+  }
+
+  return {
+    id: s.id || s._id || String(Math.random()),
+    title: s.title || 'Untitled Track',
+    artist: s.artist || 'Unknown Artist',
+    album: s.album || '90s Classics',
+    year: String(s.year || '1995'),
+    duration: durationStr,
+    seconds: seconds,
+    cover: coverProp,
+    audioUrl: s.audioUrl,
+    genre: s.genre || '90s Hits',
+  };
+}
+
+export let songs: Song[] = [];
+
+export function updateActiveSongs(newSongs: Song[]) {
+  songs.length = 0;
+  songs.push(...newSongs);
+}

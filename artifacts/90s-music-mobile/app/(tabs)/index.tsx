@@ -4,7 +4,6 @@ import { router } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { ImageBackground, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { songs } from '@/data/music';
 import { useColors } from '@/hooks/useColors';
 import { CoverArt, MiniPlayer, PlayButton, SongRow } from '@/components/PlayerPieces';
 import { usePlayer } from '@/context/PlayerContext';
@@ -13,13 +12,18 @@ export default function HomeScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const [showMenu, setShowMenu] = useState(false);
-  const { currentSong, playSong } = usePlayer();
+  const { songs, currentSong, playSong } = usePlayer();
   const featured = songs[0];
-  const mixes = useMemo(() => [
-    { label: 'Golden Romance', sub: 'Soft melodies for slow evenings', cover: songs[0].cover, accent: colors.rose },
-    { label: 'Road Trip 1996', sub: 'Big choruses, open windows', cover: songs[5].cover, accent: colors.gold },
-    { label: 'Cassette Classics', sub: 'The songs that stayed with us', cover: songs[2].cover, accent: colors.ember },
-  ], [colors.rose, colors.gold, colors.ember]);
+  const mixes = useMemo(
+    () => songs.slice(0, 3).map((song, index) => ({
+      label: song.album || song.title,
+      sub: song.artist,
+      cover: song.cover,
+      accent: [colors.rose, colors.gold, colors.ember][index],
+      song,
+    })),
+    [songs, colors.rose, colors.gold, colors.ember],
+  );
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
@@ -67,7 +71,7 @@ export default function HomeScreen() {
             </View>
             <Text style={[styles.heroTitle, { color: colors.paper }]}>Press play on{"\n"}a feeling.</Text>
             <Text style={[styles.heroDescription, { color: 'rgba(245, 227, 194, 0.72)' }]}>The songs that made every moment feel like a movie.</Text>
-            <Pressable accessibilityLabel="Start listening" onPress={() => playSong(featured)} style={({ pressed }) => [styles.heroCta, { backgroundColor: colors.rose }, pressed && styles.pressed]}>
+            <Pressable accessibilityLabel="Start listening" disabled={!featured} onPress={() => featured && playSong(featured)} style={({ pressed }) => [styles.heroCta, { backgroundColor: colors.rose, opacity: featured ? 1 : 0.55 }, pressed && styles.pressed]}>
               <Feather name="play" size={15} color={colors.primaryForeground} fill={colors.primaryForeground} />
               <Text style={[styles.heroCtaText, { color: colors.primaryForeground }]}>Start listening</Text>
             </Pressable>
@@ -106,18 +110,19 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        <View style={[styles.sectionHeader, { marginTop: 29 }]}>
-          <View>
-            <Text style={[styles.sectionEyebrow, { color: colors.gold }]}>MADE FOR YOU</Text>
-            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Curated cassette sides</Text>
+        {mixes.length > 0 && <>
+          <View style={[styles.sectionHeader, { marginTop: 29 }]}>
+            <View>
+              <Text style={[styles.sectionEyebrow, { color: colors.gold }]}>MADE FOR YOU</Text>
+              <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Your uploaded music</Text>
+            </View>
+            <Pressable onPress={() => router.push('/playlist')} hitSlop={10}>
+              <Text style={[styles.linkText, { color: colors.gold }]}>See all</Text>
+            </Pressable>
           </View>
-          <Pressable onPress={() => router.push('/playlist')} hitSlop={10}>
-            <Text style={[styles.linkText, { color: colors.gold }]}>See all</Text>
-          </Pressable>
-        </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.mixRail}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.mixRail}>
           {mixes.map((mix) => (
-            <Pressable key={mix.label} onPress={() => playSong(songs[mixes.indexOf(mix)])} style={({ pressed }) => [styles.mixCard, { backgroundColor: colors.glass, borderColor: colors.border }, pressed && styles.pressed]}>
+            <Pressable key={mix.song.id} onPress={() => playSong(mix.song)} style={({ pressed }) => [styles.mixCard, { backgroundColor: colors.glass, borderColor: colors.border }, pressed && styles.pressed]}>
               <View style={[styles.mixArtWrap, { backgroundColor: mix.accent }]}>
                 <CoverArt source={mix.cover} size={116} radius={10} />
                 <View style={[styles.mixPlay, { backgroundColor: mix.accent }]}>
@@ -128,7 +133,8 @@ export default function HomeScreen() {
               <Text numberOfLines={1} style={[styles.mixSub, { color: colors.mutedForeground }]}>{mix.sub}</Text>
             </Pressable>
           ))}
-        </ScrollView>
+          </ScrollView>
+        </>}
 
         <View style={[styles.sectionHeader, { marginTop: 29 }]}>
           <View>
@@ -139,7 +145,9 @@ export default function HomeScreen() {
             <Text style={[styles.linkText, { color: colors.gold }]}>View all</Text>
           </Pressable>
         </View>
-        {songs.slice(0, 4).map((song, index) => <SongRow key={song.id} song={song} index={index} compact />)}
+        {songs.length > 0 ? songs.slice(0, 4).map((song, index) => <SongRow key={song.id} song={song} index={index} compact />) : (
+          <Text style={[styles.emptyLibrary, { color: colors.mutedForeground }]}>Your uploaded songs will appear here.</Text>
+        )}
       </ScrollView>
       <View style={[styles.floatingPlayer, { bottom: insets.bottom + 76 }]}>
         <MiniPlayer onOpen={() => router.push('/now-playing')} />
@@ -196,5 +204,6 @@ const styles = StyleSheet.create({
   mixTitle: { fontSize: 12, fontFamily: 'Inter_600SemiBold', marginBottom: 5 },
   mixSub: { fontSize: 10, fontFamily: 'Inter_400Regular' },
   floatingPlayer: { position: 'absolute', left: 14, right: 14 },
+  emptyLibrary: { fontSize: 13, fontFamily: 'Inter_400Regular', paddingVertical: 18 },
   pressed: { opacity: 0.76, transform: [{ scale: 0.985 }] },
 });

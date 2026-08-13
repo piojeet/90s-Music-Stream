@@ -5,14 +5,13 @@ import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CoverArt, PlayButton, ProgressBar, SongRow } from '@/components/PlayerPieces';
-import { songs } from '@/data/music';
 import { usePlayer } from '@/context/PlayerContext';
 import { useColors } from '@/hooks/useColors';
 
 export default function NowPlayingScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { currentSong, currentIndex, previous, next, favorites, toggleFavorite, shuffle, repeat, setShuffle, setRepeat } = usePlayer();
+  const { songs, currentSong, currentIndex, previous, next, favorites, toggleFavorite, shuffle, repeat, setShuffle, setRepeat } = usePlayer();
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <LinearGradient colors={['rgba(115, 49, 33, 0.38)', colors.background]} style={StyleSheet.absoluteFill} />

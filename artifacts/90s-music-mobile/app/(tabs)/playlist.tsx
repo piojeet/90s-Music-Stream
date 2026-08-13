@@ -4,15 +4,19 @@ import React, { useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SongRow } from '@/components/PlayerPieces';
-import { songs } from '@/data/music';
 import { useColors } from '@/hooks/useColors';
 import { MiniPlayer } from '@/components/PlayerPieces';
+import { usePlayer } from '@/context/PlayerContext';
 
 export default function PlaylistScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const [query, setQuery] = useState('');
-  const filtered = useMemo(() => songs.filter((song) => `${song.title} ${song.artist} ${song.album} ${song.genre}`.toLowerCase().includes(query.toLowerCase())), [query]);
+  const { songs } = usePlayer();
+  const filtered = useMemo(
+    () => songs.filter((song) => `${song.title} ${song.artist} ${song.album} ${song.genre}`.toLowerCase().includes(query.toLowerCase())),
+    [query, songs],
+  );
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <FlatList
